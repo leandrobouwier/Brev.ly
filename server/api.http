@@ -1,0 +1,13 @@
+### Criar um Link (POST)
+POST http://localhost:3333/links
+Content-Type: application/json
+
+{
+  "url": "https://www.google.com"
+}
+
+### Listar Links (GET)
+GET http://localhost:3333/links
+
+### Deletar Link (DELETE)
+DELETE http://localhost:3333/links/1

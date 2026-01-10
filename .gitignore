@@ -1,0 +1,41 @@
+# Dependências
+node_modules/
+package-lock.json
+yarn.lock
+
+# Build e Distribuição
+dist/
+build/
+out/
+coverage/
+
+# Ambiente e Segurança 
+.env
+.env.test
+.env.production
+.env.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# IDE e Editores
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Sistema Operacional (Mac/Windows)
+.DS_Store
+Thumbs.db
+
+# Banco de Dados (SQLite se usar)
+*.sqlite
+*.sqlite-journal
+
+# Uploads e Temporários
+tmp/
+uploads/
