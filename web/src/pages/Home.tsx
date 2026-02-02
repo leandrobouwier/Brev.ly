@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { DownloadSimple, Link as LinkIcon, Spinner, WarningCircle } from "@phosphor-icons/react";
+import { DownloadSimple, Link as LinkIcon, Spinner, WarningCircle, Warning } from "@phosphor-icons/react";
 import { LinkItem } from "../components/LinkItem";
 import { api } from "../lib/api";
 import { AxiosError } from "axios";
@@ -11,11 +11,10 @@ import Logo from "@/assets/Logo.svg";
 
 // --- SCHEMA ---
 const createLinkSchema = z.object({
-  originalUrl: z.string().url("Digite uma URL válida (ex: https://...)"),
+  originalUrl: z.string().url("Digite uma URL válida."),
   code: z
     .string()
-    .min(3, "O código deve ter pelo menos 3 caracteres")
-    .regex(/^[a-z0-9-_]+$/, "Informe uma url minuscula e sem espaço/caracter especial"),
+    .regex(/^[a-z0-9-_]+$/, "Informe uma url minuscula e sem espaço/caracter especial."),
 });
 
 type CreateLinkData = z.infer<typeof createLinkSchema>;
@@ -134,7 +133,7 @@ export function Home() {
     }
   }
 
-  async function handleDelete(id: number, code:string) {
+  async function handleDelete(id: number, code: string) {
     const confirm = window.confirm(`Você realmente quer apagar o link brev.ly/${code}`);
     if (confirm) {
       await deleteLink(id);
@@ -174,9 +173,12 @@ export function Home() {
                 {...register("originalUrl")}
               />
               {errors.originalUrl && (
-                <span className="text-xs text-red-500 mt-1 block">
-                  {errors.originalUrl.message}
-                </span>
+                <div className="flex items-center gap-1 mt-1 text-gray-400">
+                  <Warning size={16} weight="fill" className="text-red-500" />
+                  <span className="text-xs">
+                    {errors.originalUrl.message}
+                  </span>
+                </div>
               )}
             </div>
 
@@ -202,9 +204,12 @@ export function Home() {
                 />
               </div>
               {errors.code && (
-                <span className="text-xs text-red-500 mt-1 block">
-                  {errors.code.message}
-                </span>
+                <div className="flex items-center gap-1 mt-1 text-gray-400">
+                  <Warning size={16} weight="fill" className="text-red-500" />
+                  <span className="text-xs">
+                    {errors.code.message}
+                  </span>
+                </div>
               )}
             </div>
 
@@ -238,15 +243,20 @@ export function Home() {
                   disabled={isDownloading || isEmpty}
                   className="h-8 px-4 flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-500 rounded-md typography-sm-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <DownloadSimple size={16} />
-                  {isDownloading ? "Gerando..." : "Baixar CSV"}
+                  {isDownloading ? (
+                    <Spinner size={18} weight="bold" className="animate-spin" />
+                  ) : (
+                    <DownloadSimple size={18} weight="bold" />
+                  )}
+
+                  <span>Baixar CSV</span>
                 </button>
               </div>
             </div>
 
             <div className="flex-1 overflow-y-auto px-8 flex flex-col custom-scrollbar">
               {isLoading && (
-                <div className="flex-1 flex flex-col items-center justify-center gap-2 ">
+                <div className="flex-1 flex flex-col p-8 items-center justify-center gap-2 ">
                   <Spinner className="size-8 text-gray-400 animate-spin" />
                   <span className="text-gray-500 uppercase text-sm font-medium tracking-wider">
                     Carregando Links...
@@ -255,7 +265,7 @@ export function Home() {
               )}
 
               {!isLoading && isEmpty && (
-                <div className="flex-1 flex flex-col items-center justify-center gap-4 ">
+                <div className="flex-1 flex flex-col p-8 items-center justify-center gap-4 ">
                   <div className="bg-gray-100 p-4 rounded-full">
                     <LinkIcon size={32} className="text-gray-400" />
                   </div>

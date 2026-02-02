@@ -29,11 +29,11 @@ export function LinkItem({ code, originalUrl, clicks, onDelete }: LinkItemProps)
   }
 
   return (
-    <div className="flex flex-col sm:flex-row items-start sm:items-center 
+    <div className="flex  sm:flex-row items-center  sm:items-center 
     justify-between p-4 bg-white border-b border-gray-200 last:border-0 hover:bg-gray-50 
     transition-colors gap-4 animate-fade-in">
 
-      <div className="flex flex-col gap-1 overflow-hidden w-full sm:w-auto">
+      <div className="flex flex-col gap-1 overflow-hidden flex-1 min-w-0 sm:w-auto">
         <a
           href={`/${code}`}
           target="_blank"
@@ -47,7 +47,7 @@ export function LinkItem({ code, originalUrl, clicks, onDelete }: LinkItemProps)
         </span>
       </div>
 
-      <div className="flex items-center gap-6 w-full sm:w-auto justify-between sm:justify-end">
+      <div className="flex items-center gap-2 sm:gap-6  sm:w-auto  sm:justify-end">
         <span className="text-gray-600 typography-sm font-medium whitespace-nowrap">
           {clicks} acessos
         </span>

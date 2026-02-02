@@ -73,7 +73,6 @@ body {
   background-color: var(--color-gray-200);
 }
 
-/* Animação para barra de carregamento infinita */
 @keyframes loading-bar {
   0% {
     transform: translateX(-100%);
@@ -82,8 +81,6 @@ body {
   100% {
     transform: translateX(100%);
   }
-
-  /* Corre até o final da tela */
 }
 
 .animate-loading-bar {
