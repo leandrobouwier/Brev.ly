@@ -10,4 +10,4 @@ Content-Type: application/json
 GET http://localhost:3333/links
 
 ### Deletar Link (DELETE)
-DELETE http://localhost:3333/links/1
+DELETE http://localhost:3333/links/2

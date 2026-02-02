@@ -3,14 +3,19 @@ import cors from '@fastify/cors';
 import { z } from 'zod';
 import { db } from './db';
 import { links } from './db/schema';
-import { generateShortCode } from './lib/random'; // <--- Agora esse arquivo existe!
-import { PostgresError } from 'postgres';
+import { generateShortCode } from './lib/random'; 
 import { desc, eq } from 'drizzle-orm';
+
+import { PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { s3 } from './lib/storage';
+import { randomUUID } from 'node:crypto';
 
 const app = fastify();
 
 app.register(cors, {
     origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
 });
 
 // Rota: CRIAR LINK
@@ -32,11 +37,13 @@ app.post('/links', async (request, reply) => {
 
         return reply.status(201).send(result[0]);
 
-    } catch (err) {
-        if (err instanceof PostgresError && err.code === '23505') {
-            return reply.status(400).send({ message: 'Este código já está em uso.' });
+    } catch (err: any) {
+
+        if (err.code === '23505' || err.cause?.code === '23505') {
+            return reply.status(400).send({
+                message: 'Essa URL encurtada já existe'
+            });
         }
-        console.error(err);
         return reply.status(500).send({ message: 'Erro interno do servidor.' });
     }
 });
@@ -61,10 +68,9 @@ app.get('/:code', async (request, reply) => {
     const link = result[0];
 
     await db.update(links)
-        .set({ clicks: (link.clicks || 0) + 1 }) // Correção 1: Se for nulo, usa 0
+        .set({ clicks: (link.clicks || 0) + 1 }) 
         .where(eq(links.id, link.id));
 
-    // Correção 2: Removemos o 302, ele é o padrão automático
     return reply.redirect(link.originalUrl);
 });
 
@@ -73,7 +79,7 @@ app.get('/links', async () => {
     const result = await db
         .select()
         .from(links)
-        .orderBy(desc(links.createdAt)); // Agora o 'desc' vai funcionar porque importamos!
+        .orderBy(desc(links.createdAt)); 
 
     return result;
 });
@@ -81,49 +87,62 @@ app.get('/links', async () => {
 // Rota: DELETAR LINK
 app.delete('/links/:id', async (request, reply) => {
     const deleteLinkSchema = z.object({
-        id: z.string().transform((v) => Number(v)), // Converte "12" (texto) para 12 (número)
+        id: z.string().transform((v) => Number(v)), 
     });
 
     const { id } = deleteLinkSchema.parse(request.params);
 
-    // Deleta onde o ID for igual ao passado
     const result = await db.delete(links).where(eq(links.id, id)).returning();
 
-    // Se não deletou nada (ID não existe), retorna 404
     if (result.length === 0) {
         return reply.status(404).send({ message: 'Link não encontrado.' });
     }
 
-    // Retorna vazio com status 204 (No Content - Sucesso sem corpo)
     return reply.status(204).send();
 });
 
-// Rota: EXPORTAR CSV (Teste Local)
 app.get('/metrics', async (request, reply) => {
-    // 1. Busca todos os links
     const result = await db
         .select()
         .from(links)
         .orderBy(desc(links.createdAt));
 
-    // 2. Cria o cabeçalho do CSV
-    const csvHeaders = 'id,code,original_url,clicks,created_at';
-
-    // 3. Transforma cada link em uma linha de texto separada por vírgula
+    const csvHeaders = 'id;code;original_url;clicks;created_at';
     const csvRows = result.map(item => {
-        return `${item.id},${item.code},${item.originalUrl},${item.clicks},${item.createdAt}`;
+        return `${item.id};${item.code};${item.originalUrl};${item.clicks};${item.createdAt}`;
     });
 
-    // 4. Junta tudo com quebras de linha (\n)
-    const csvContent = [csvHeaders, ...csvRows].join('\n');
+    const csvContent = '\uFEFF' + [csvHeaders, ...csvRows].join('\n');
+    const fileKey = `relatorio-${randomUUID()}.csv`;
 
-    // 5. Configura a resposta para o navegador entender que é um download
-    return reply
-        .header('Content-Type', 'text/csv')
-        .header('Content-Disposition', 'attachment; filename="relatorio.csv"')
-        .send(csvContent);
+    // Upload para o S3
+    await s3.send(new PutObjectCommand({
+        Bucket: process.env.AWS_BUCKET_NAME,
+        Key: fileKey,
+        Body: csvContent,
+        ContentType: 'text/csv',
+    }));
+
+    // Gerar link de download temporário (Presigned URL)
+    const downloadUrl = await getSignedUrl(
+        s3,
+        new GetObjectCommand({
+            Bucket: process.env.AWS_BUCKET_NAME,
+            Key: fileKey,
+        }),
+        { expiresIn: 600 } 
+    );
+    
+    return reply.send({
+        fileUrl: downloadUrl,
+    });
 });
 
-app.listen({ port: 3333 }).then(() => {
-    console.log('🔥 Servidor rodando em http://localhost:3333');
+const port = Number(process.env.PORT) || 3333;
+
+app.listen({
+    port,
+    host: '0.0.0.0'
+}).then(() => {
+    console.log(`🔥 Servidor rodando em http://localhost:${port}`);
 });
