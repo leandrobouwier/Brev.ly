@@ -134,8 +134,8 @@ export function Home() {
     }
   }
 
-  async function handleDelete(id: number) {
-    const confirm = window.confirm("Tem certeza que deseja deletar este link?");
+  async function handleDelete(id: number, code:string) {
+    const confirm = window.confirm(`Você realmente quer apagar o link brev.ly/${code}`);
     if (confirm) {
       await deleteLink(id);
     }
@@ -155,12 +155,12 @@ export function Home() {
           {/* Formulario novo Link -*/}
           <form
             onSubmit={handleSubmit(handleSave)}
-            className="flex flex-col p-8 gap-4 bg-white rounded-xl shadow-sm w-full lg:w-5/12 overflow-y-auto max-h-full"
+            className="flex flex-col p-8 gap-4 bg-white rounded-xl shadow-sm w-full lg:w-5/12  max-h-full"
           >
             <p className="typography-lg text-gray-600">Novo link</p>
 
-            <div>
-              <label htmlFor="originalUrl" className="block typography-xs text-gray-500 mb-2">
+            <div className="group">
+              <label htmlFor="originalUrl" className="block typography-xs text-gray-500 mb-2 group-focus-within:text-blue-600 group-focus-within:font-bold transition-colors">
                 Link Original
               </label>
               <input
@@ -180,8 +180,8 @@ export function Home() {
               )}
             </div>
 
-            <div>
-              <label htmlFor="code" className="block typography-xs text-gray-500 mb-2">
+            <div className="group">
+              <label htmlFor="code" className="block typography-xs text-gray-500 mb-2 group-focus-within:text-blue-600 group-focus-within:font-bold transition-colors">
                 Link Encurtado
               </label>
 
@@ -197,7 +197,6 @@ export function Home() {
                 <input
                   id="code"
                   type="text"
-                  placeholder="personalizado"
                   className="flex-1 bg-transparent outline-none text-gray-600 placeholder:text-gray-400 typography-md-regular"
                   {...register("code")}
                 />
@@ -228,21 +227,24 @@ export function Home() {
               </div>
             )}
 
-            <div className="flex justify-between items-center gap-4 px-8 py-6 border-b border-gray-200 shrink-0 bg-white z-0">
-              <p className="typography-lg text-gray-600">Meus links</p>
-
-              <button
-                type="button"
-                onClick={() => downloadCSV()}
-                disabled={isDownloading || isEmpty}
-                className="h-8 px-4 flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-500 rounded-md typography-sm-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <DownloadSimple size={16} />
-                {isDownloading ? "Gerando..." : "Baixar CSV"}
-              </button>
+            <div className="px-8 bg-white shrink-0 z-0">
+              <div className="flex justify-between items-center py-6 border-b border-gray-200 gap-4">
+                <p className="typography-lg text-gray-600">
+                  Meus links
+                </p>
+                <button
+                  type="button"
+                  onClick={() => downloadCSV()}
+                  disabled={isDownloading || isEmpty}
+                  className="h-8 px-4 flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-500 rounded-md typography-sm-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <DownloadSimple size={16} />
+                  {isDownloading ? "Gerando..." : "Baixar CSV"}
+                </button>
+              </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-8 flex flex-col custom-scrollbar">
+            <div className="flex-1 overflow-y-auto px-8 flex flex-col custom-scrollbar">
               {isLoading && (
                 <div className="flex-1 flex flex-col items-center justify-center gap-2 ">
                   <Spinner className="size-8 text-gray-400 animate-spin" />
@@ -271,7 +273,7 @@ export function Home() {
                       code={link.code}
                       originalUrl={link.originalUrl}
                       clicks={link.clicks}
-                      onDelete={() => handleDelete(link.id)}
+                      onDelete={() => handleDelete(link.id, link.code)}
                     />
                   ))}
                 </div>
