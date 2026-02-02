@@ -54,5 +54,5 @@ Esse projeto foi desenvolvido com a seguinte stack (T3 Stack / Modern Web):
 
 1. **Clone o repositório:**
    ```bash
-   git clone [https://github.com/seu-usuario/brevly.git](https://github.com/seu-usuario/brevly.git)
+   git clone https://github.com/leandrobouwier/Brev.ly
    cd brevly
